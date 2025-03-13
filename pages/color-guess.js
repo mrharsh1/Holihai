@@ -1,70 +1,116 @@
 "use client"
 import { useState, useEffect } from 'react';
 
-export default function ColorGuess() {
+export default function Home() {
   const colors = ['red', 'green', 'blue', 'yellow', 'pink', 'orange', 'purple'];
   const [score, setScore] = useState(0);
   const [currentColor, setCurrentColor] = useState(getRandomColor());
-  const [timeLeft, setTimeLeft] = useState(7);
-  const [level, setLevel] = useState(1);
+  const [fakeColor, setFakeColor] = useState('');
+  const [timeLeft, setTimeLeft] = useState(5);
+  const [gameOver, setGameOver] = useState(false);
 
+  // Random color generator
   function getRandomColor() {
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
+  // Generate fake color to confuse
+  function getFakeColor(realColor) {
+    let newColor = realColor;
+    while (newColor === realColor) {
+      newColor = getRandomColor();
+    }
+    return newColor;
+  }
+
+  // Timer logic
   useEffect(() => {
-    if (timeLeft <= 0) {
-      alert(`⏳ Time's up! Final Score: ${score}`);
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      alert('⏰ Samay Samapt! Aapka Score: ' + score);
       resetGame();
     }
-    const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-    return () => clearTimeout(timer);
   }, [timeLeft]);
 
+  // Check user's answer
   const checkAnswer = (color) => {
     if (color === currentColor) {
       const newScore = score + 1;
       setScore(newScore);
       if (newScore % 5 === 0) {
-        setLevel(level + 1);
+        alert('🎉 Level Up! Ab speed aur tez hai!');
       }
       nextRound();
     } else {
-      alert(`❌ Wrong! It was ${currentColor}`);
+      alert('❌ Galat Jawab! Sahi rang tha: ' + currentColor);
       resetGame();
     }
   };
 
+  // Start next round
   const nextRound = () => {
-    setCurrentColor(getRandomColor());
-    setTimeLeft(7 - level * 0.5);
+    const newColor = getRandomColor();
+    setCurrentColor(newColor);
+    setFakeColor(Math.random() > 0.5 ? getFakeColor(newColor) : newColor);
+    setTimeLeft(5); // Reset timer
   };
 
+  // Reset game
   const resetGame = () => {
     setScore(0);
-    setLevel(1);
-    setTimeLeft(7);
-    setCurrentColor(getRandomColor());
+    setTimeLeft(5);
+    setGameOver(true);
+    setTimeout(() => setGameOver(false), 1000);
+    nextRound();
   };
 
   return (
-    <div style={container}>
-      <h1>🎯 Classic Color Guess</h1>
-      <p>Score: {score} | Level: {level}</p>
-      <p>⏳ Time Left: {timeLeft}s</p>
-      <h2 style={{ color: currentColor }}>{currentColor.toUpperCase()}</h2>
+    <div style={{ textAlign: 'center', padding: '2rem', background: '#FFDDC1' }}>
+      <h1>🎨 Holihai – Ultimate Color Game!</h1>
+      <h2>Rang Pehchano Aur Jeeto!</h2>
+      <p>🏆 Score: {score}</p>
+      <p>⏳ Time Left: {timeLeft} sec</p>
 
-      <div style={btnGrid}>
-        {colors.map((color) => (
-          <button key={color} onClick={() => checkAnswer(color)} style={{ ...btnStyle, backgroundColor: color }}>
-            {color}
-          </button>
-        ))}
+      <div
+        style={{
+          margin: '20px',
+          fontSize: '30px',
+          fontWeight: 'bold',
+          color: currentColor,
+          animation: gameOver ? 'shake 0.5s' : 'none',
+        }}
+      >
+        {fakeColor.toUpperCase()}
       </div>
+
+      {colors.map((color) => (
+        <button
+          key={color}
+          style={{
+            margin: '10px',
+            padding: '10px 20px',
+            backgroundColor: color,
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+          onClick={() => checkAnswer(color)}
+        >
+          {color}
+        </button>
+      ))}
+
+      <style jsx>{`
+        @keyframes shake {
+          0% { transform: translateX(0); }
+          25% { transform: translateX(-5px); }
+          50% { transform: translateX(5px); }
+          75% { transform: translateX(-5px); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
     </div>
   );
 }
-
-const container = { textAlign: 'center', padding: '2rem', background: '#FF6F91' };
-const btnGrid = { display: 'flex', justifyContent: 'center', gap: '10px' };
-const btnStyle = { padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', border: 'none', color: 'white' };
